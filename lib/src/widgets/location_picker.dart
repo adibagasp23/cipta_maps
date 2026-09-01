@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cipta_debug_badges/flutter_debug_badges.dart';
+import 'package:geolocator/geolocator.dart';
 
 import '../config/map_config.dart';
 
@@ -49,6 +50,51 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
     return 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$key';
   }
 
+  void _zoomChange(int delta) {
+    final current = _mapController.camera.zoom;
+    _mapController.move(_mapController.camera.center, current + delta);
+  }
+
+  Widget _zoomButton(IconData icon, VoidCallback onTap) {
+    return Material(
+      color: Colors.white,
+      elevation: 2,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(icon, size: 22, color: const Color(0xFF1F2937)),
+        ),
+      ),
+    );
+  }
+
+  /// Ambil posisi GPS device saat ini, pindahkan peta & marker ke sana.
+  Future<void> _goToCurrentPosition() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      );
+      if (!mounted) return;
+      final latlng = LatLng(position.latitude, position.longitude);
+      setState(() {
+        _marker = latlng;
+        _center = latlng;
+      });
+      _mapController.move(latlng, 16);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Gagal mendapatkan lokasi. Pastikan GPS & izin lokasi aktif.'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!CiptaMapsConfig.isConfigured) {
@@ -64,11 +110,9 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
         title: Text(widget.title ?? ''),
         actions: [
           IconButton(
-            icon: const Icon(Icons.my_location),
-            tooltip: 'Kembali ke marker',
-            onPressed: () {
-              _mapController.move(_marker, 16);
-            },
+            icon: const Icon(Icons.gps_fixed),
+            tooltip: 'Posisi saya',
+            onPressed: _goToCurrentPosition,
           ),
         ],
       ),
@@ -104,6 +148,19 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
                 ],
               ),
             ],
+          ),
+          // Zoom controls (kanan tengah)
+          Positioned(
+            right: 12,
+            top: MediaQuery.of(context).size.height * 0.3,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _zoomButton(Icons.add_rounded, () => _zoomChange(1)),
+                const SizedBox(height: 4),
+                _zoomButton(Icons.remove_rounded, () => _zoomChange(-1)),
+              ],
+            ),
           ),
           // Floating card koordinat
           Positioned(
