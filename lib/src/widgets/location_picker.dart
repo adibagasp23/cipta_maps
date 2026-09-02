@@ -64,7 +64,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
 
   String _tileUrl() {
     final key = CiptaMapsConfig.apiKey ?? '';
-    return 'https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=$key';
+    return 'https://api.maptiler.com/maps/hybrid-v4/{z}/{x}/{y}.jpg?key=$key';
   }
 
   void _zoomChange(int delta) {
