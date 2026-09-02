@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cipta_debug_badges/flutter_debug_badges.dart';
+import 'package:cipta_overlay_toast/overlay_toast.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../config/map_config.dart';
@@ -135,10 +136,10 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
       _mapController.move(latlng, 16);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Gagal mendapatkan lokasi. Pastikan GPS & izin lokasi aktif.'),
-        ),
+      CiptaToastService.show(
+        context,
+        message: 'Gagal mendapatkan lokasi. Pastikan GPS & izin lokasi aktif.',
+        icon: Icons.location_off_rounded,
       );
     }
   }

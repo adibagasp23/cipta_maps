@@ -42,6 +42,15 @@ packages:
       url: "https://github.com/adibagasp23/cipta_debug_badges.git"
     source: git
     version: "0.1.6"
+  cipta_overlay_toast:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "716077647b06fdbb786bf423d7793a44bf45199e"
+      url: "https://github.com/adibagasp23/cipta_overlay_toast.git"
+    source: git
+    version: "0.3.3"
   clock:
     dependency: transitive
     description:
