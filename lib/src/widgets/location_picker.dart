@@ -68,15 +68,9 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
     LatLng start = widget.initial ?? LatLng(c.lat, c.lng);
 
     if (widget.initial == null && widget.startAtCurrentLocation) {
-      try {
-        final pos = await Geolocator.getCurrentPosition(
-          locationSettings:
-              const LocationSettings(accuracy: LocationAccuracy.high),
-        );
-        start = LatLng(pos.latitude, pos.longitude);
-      } catch (_) {
-        // fallback ke default
-      }
+      final pos = await _tryGetCurrentPosition(showToast: false);
+      if (pos != null) start = pos;
+      // gagal/izin ditolak → fallback ke default
     }
 
     if (!mounted) return;
@@ -154,17 +148,32 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
   /// Request permission eksplisit — supaya opsi "Location" muncul di
   /// Settings iOS (app dianggap pernah meminta izin lokasi).
   Future<void> _goToCurrentPosition() async {
+    final pos = await _tryGetCurrentPosition(showToast: true);
+    if (pos == null || !mounted) return;
+    setState(() {
+      _marker = pos;
+      _center = pos;
+    });
+    setState(() => _zoomLevel = 20);
+    _mapController.move(pos, 20);
+  }
+
+  /// Helper: cek GPS aktif → request izin → ambil posisi.
+  /// [showToast] = true → tampilkan toast error (untuk tombol GPS).
+  /// Return LatLng? (null = gagal/izin ditolak).
+  Future<LatLng?> _tryGetCurrentPosition({bool showToast = false}) async {
     try {
       // 1. Cek GPS aktif
       final gpsEnabled = await Geolocator.isLocationServiceEnabled();
       if (!gpsEnabled) {
-        if (!mounted) return;
-        CiptaToastService.show(
-          context,
-          message: 'GPS tidak aktif. Nyalakan layanan lokasi terlebih dahulu.',
-          icon: Icons.location_off_rounded,
-        );
-        return;
+        if (showToast && mounted) {
+          CiptaToastService.show(
+            context,
+            message: 'GPS tidak aktif. Nyalakan layanan lokasi terlebih dahulu.',
+            icon: Icons.location_off_rounded,
+          );
+        }
+        return null;
       }
 
       // 2. Cek / minta izin lokasi
@@ -174,34 +183,31 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        if (!mounted) return;
-        CiptaToastService.show(
-          context,
-          message: 'Izin lokasi ditolak. Aktifkan di Settings > Location.',
-          icon: Icons.location_off_rounded,
-        );
-        return;
+        if (showToast && mounted) {
+          CiptaToastService.show(
+            context,
+            message: 'Izin lokasi ditolak. Aktifkan di Settings > Location.',
+            icon: Icons.location_off_rounded,
+          );
+        }
+        return null;
       }
 
       // 3. Ambil posisi
       final position = await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        locationSettings:
+            const LocationSettings(accuracy: LocationAccuracy.high),
       );
-      if (!mounted) return;
-      final latlng = LatLng(position.latitude, position.longitude);
-      setState(() {
-        _marker = latlng;
-        _center = latlng;
-      });
-      setState(() => _zoomLevel = 20);
-      _mapController.move(latlng, 20);
+      return LatLng(position.latitude, position.longitude);
     } catch (_) {
-      if (!mounted) return;
-      CiptaToastService.show(
-        context,
-        message: 'Gagal mendapatkan lokasi. Pastikan GPS & izin lokasi aktif.',
-        icon: Icons.location_off_rounded,
-      );
+      if (showToast && mounted) {
+        CiptaToastService.show(
+          context,
+          message: 'Gagal mendapatkan lokasi. Pastikan GPS & izin lokasi aktif.',
+          icon: Icons.location_off_rounded,
+        );
+      }
+      return null;
     }
   }
 
