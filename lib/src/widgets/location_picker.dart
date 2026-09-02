@@ -121,8 +121,39 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
   }
 
   /// Ambil posisi GPS device saat ini, pindahkan peta & marker ke sana.
+  /// Request permission eksplisit — supaya opsi "Location" muncul di
+  /// Settings iOS (app dianggap pernah meminta izin lokasi).
   Future<void> _goToCurrentPosition() async {
     try {
+      // 1. Cek GPS aktif
+      final gpsEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!gpsEnabled) {
+        if (!mounted) return;
+        CiptaToastService.show(
+          context,
+          message: 'GPS tidak aktif. Nyalakan layanan lokasi terlebih dahulu.',
+          icon: Icons.location_off_rounded,
+        );
+        return;
+      }
+
+      // 2. Cek / minta izin lokasi
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (!mounted) return;
+        CiptaToastService.show(
+          context,
+          message: 'Izin lokasi ditolak. Aktifkan di Settings > Location.',
+          icon: Icons.location_off_rounded,
+        );
+        return;
+      }
+
+      // 3. Ambil posisi
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
       );
