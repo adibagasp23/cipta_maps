@@ -35,7 +35,7 @@ class CiptaMapPicker extends StatefulWidget {
 class _CiptaMapPickerState extends State<CiptaMapPicker> {
   late LatLng _center;
   late LatLng _marker;
-  double _zoomLevel = 15;
+  double _zoomLevel = 20;
   final MapController _mapController = MapController();
 
   @override
@@ -131,7 +131,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
         _marker = latlng;
         _center = latlng;
       });
-      setState(() => _zoomLevel = 16);
+      setState(() => _zoomLevel = 20);
       _mapController.move(latlng, 16);
     } catch (_) {
       if (!mounted) return;
@@ -170,7 +170,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
             mapController: _mapController,
             options: MapOptions(
               initialCenter: _center,
-              initialZoom: 15,
+              initialZoom: 20,
               onTap: (tapPos, latlng) {
                 setState(() => _marker = latlng);
               },
