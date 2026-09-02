@@ -164,18 +164,21 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _center,
-              initialZoom: 20,
-              onTap: (tapPos, latlng) {
-                setState(() => _marker = latlng);
-              },
-            ),
-            children: [
+      body: CiptaDebugSection(
+        fileName: 'map_picker_page.dart',
+        fullPage: true,
+        child: Stack(
+          children: [
+            FlutterMap(
+              mapController: _mapController,
+              options: MapOptions(
+                initialCenter: _center,
+                initialZoom: 20,
+                onTap: (tapPos, latlng) {
+                  setState(() => _marker = latlng);
+                },
+              ),
+              children: [
               TileLayer(
                 urlTemplate: _tileUrl(),
                 userAgentPackageName: 'com.cipta.antrikuy',
@@ -296,6 +299,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
             ),
           ),
         ],
+      ),
       ),
     );
   }
