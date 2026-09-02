@@ -78,6 +78,9 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
       _marker = start;
       _center = start;
     });
+    // initialCenter MapOptions hanya dibaca saat build pertama, jadi pindahkan
+    // kamera secara eksplisit setelah GPS selesai (aman meski map belum ready).
+    _mapController.move(start, _zoomLevel);
   }
 
   @override
