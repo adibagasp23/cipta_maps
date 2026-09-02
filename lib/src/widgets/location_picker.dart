@@ -68,7 +68,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
 
   void _zoomChange(int delta) {
     final current = _mapController.camera.zoom;
-    final next = (current + delta).clamp(2.0, 19.0);
+    final next = (current + delta).clamp(2.0, 22.0);
     setState(() => _zoomLevel = next);
     _mapController.move(_mapController.camera.center, next);
   }
@@ -179,7 +179,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
               TileLayer(
                 urlTemplate: _tileUrl(),
                 userAgentPackageName: 'com.cipta.antrikuy',
-                maxZoom: 19,
+                maxZoom: 22,
               ),
               MarkerLayer(
                 markers: [
