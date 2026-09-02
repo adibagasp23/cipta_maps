@@ -22,11 +22,16 @@ class CiptaMapPicker extends StatefulWidget {
   final LatLngConfig? initialConfig;
   final String? title;
 
+  /// Jika true dan [initial] kosong, coba ambil lokasi GPS device saat ini
+  /// sebagai titik awal peta; fallback ke defaultCenter bila gagal.
+  final bool startAtCurrentLocation;
+
   const CiptaMapPicker({
     super.key,
     this.initial,
     this.initialConfig,
     this.title = 'Pilih Lokasi',
+    this.startAtCurrentLocation = false,
   });
 
   @override
@@ -45,6 +50,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
     final c = widget.initialConfig ?? CiptaMapsConfig.defaultCenter;
     _marker = widget.initial ?? LatLng(c.lat, c.lng);
     _center = _marker;
+    _resolveInitial();
     // Update badge zoom level saat peta di-pan/zoom (pakai MapEventMove).
     _mapController.mapEventStream.listen((event) {
       if (event is MapEventMove || event is MapEventDoubleTapZoom) {
@@ -53,6 +59,30 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
           setState(() => _zoomLevel = z);
         }
       }
+    });
+  }
+
+  /// Tentukan titik awal: initial → GPS (jika diminta & kosong) → default.
+  Future<void> _resolveInitial() async {
+    final c = widget.initialConfig ?? CiptaMapsConfig.defaultCenter;
+    LatLng start = widget.initial ?? LatLng(c.lat, c.lng);
+
+    if (widget.initial == null && widget.startAtCurrentLocation) {
+      try {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings:
+              const LocationSettings(accuracy: LocationAccuracy.high),
+        );
+        start = LatLng(pos.latitude, pos.longitude);
+      } catch (_) {
+        // fallback ke default
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _marker = start;
+      _center = start;
     });
   }
 
@@ -343,6 +373,7 @@ Future<LatLng?> showCiptaMapPicker({
   LatLng? initial,
   LatLngConfig? initialConfig,
   String title = 'Pilih Lokasi',
+  bool startAtCurrentLocation = false,
 }) {
   return Navigator.of(context).push<LatLng>(
     MaterialPageRoute(
@@ -350,6 +381,8 @@ Future<LatLng?> showCiptaMapPicker({
         initial: initial,
         initialConfig: initialConfig,
         title: title,
+        startAtCurrentLocation: startAtCurrentLocation,
+      ),
       ),
     ),
   );
