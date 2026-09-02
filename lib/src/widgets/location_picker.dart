@@ -35,6 +35,7 @@ class CiptaMapPicker extends StatefulWidget {
 class _CiptaMapPickerState extends State<CiptaMapPicker> {
   late LatLng _center;
   late LatLng _marker;
+  double _zoomLevel = 15;
   final MapController _mapController = MapController();
 
   @override
@@ -43,6 +44,21 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
     final c = widget.initialConfig ?? CiptaMapsConfig.defaultCenter;
     _marker = widget.initial ?? LatLng(c.lat, c.lng);
     _center = _marker;
+    // Update badge zoom level saat peta di-pan/zoom (pakai MapEventMove).
+    _mapController.mapEventStream.listen((event) {
+      if (event is MapEventMove || event is MapEventDoubleTapZoom) {
+        final z = _mapController.camera.zoom;
+        if ((z - _zoomLevel).abs() > 0.05) {
+          setState(() => _zoomLevel = z);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
   }
 
   String _tileUrl() {
@@ -52,7 +68,9 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
 
   void _zoomChange(int delta) {
     final current = _mapController.camera.zoom;
-    _mapController.move(_mapController.camera.center, current + delta);
+    final next = (current + delta).clamp(2.0, 19.0);
+    setState(() => _zoomLevel = next);
+    _mapController.move(_mapController.camera.center, next);
   }
 
   Widget _zoomButton(IconData icon, VoidCallback onTap) {
@@ -72,6 +90,35 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
     );
   }
 
+  /// Badge zoom level (misal "15x") di antara tombol +/-.
+  Widget _zoomLevelBadge() {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          '${_zoomLevel.round()}x',
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF1F2937),
+          ),
+        ),
+      ),
+    );
+  }
+
   /// Ambil posisi GPS device saat ini, pindahkan peta & marker ke sana.
   Future<void> _goToCurrentPosition() async {
     try {
@@ -84,6 +131,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
         _marker = latlng;
         _center = latlng;
       });
+      setState(() => _zoomLevel = 16);
       _mapController.move(latlng, 16);
     } catch (_) {
       if (!mounted) return;
@@ -157,6 +205,8 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 _zoomButton(Icons.add_rounded, () => _zoomChange(1)),
+                const SizedBox(height: 4),
+                _zoomLevelBadge(),
                 const SizedBox(height: 4),
                 _zoomButton(Icons.remove_rounded, () => _zoomChange(-1)),
               ],
