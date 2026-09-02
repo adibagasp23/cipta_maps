@@ -164,7 +164,7 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
         _center = latlng;
       });
       setState(() => _zoomLevel = 20);
-      _mapController.move(latlng, 16);
+      _mapController.move(latlng, 20);
     } catch (_) {
       if (!mounted) return;
       CiptaToastService.show(
