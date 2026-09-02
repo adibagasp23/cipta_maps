@@ -204,6 +204,9 @@ class _CiptaMapPickerState extends State<CiptaMapPicker> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // GPS — langsung ke lokasi saat ini
+                _zoomButton(Icons.gps_fixed, _goToCurrentPosition),
+                const SizedBox(height: 4),
                 _zoomButton(Icons.add_rounded, () => _zoomChange(1)),
                 const SizedBox(height: 4),
                 _zoomLevelBadge(),
