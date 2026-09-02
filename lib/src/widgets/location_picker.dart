@@ -383,7 +383,6 @@ Future<LatLng?> showCiptaMapPicker({
         title: title,
         startAtCurrentLocation: startAtCurrentLocation,
       ),
-      ),
     ),
   );
 }
